@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #include "TAvl.h"
+#include "TAvlQueue.h"
 
 TAvl *NewNode(TAvl *parent, char *key, unsigned long long value) {
     TAvl *temp;
@@ -382,17 +383,9 @@ void DeleteTree(TAvl *tree) {
     free(tree);
 }
 
-void SaveAux(TAvl *tree, int curLevel, int reqLevel, FILE *fp) {
-    if (tree == NULL) {
-        return;
-    }
-    if (curLevel == reqLevel) {
-        fwrite(&tree->value, sizeof(tree->value), 1, fp);
-        fwrite(tree->key, sizeof(char), MAX_KEY_LEN, fp);
-        return;
-    }
-    SaveAux(tree->left, curLevel + 1, reqLevel, fp);
-    SaveAux(tree->right, curLevel + 1, reqLevel, fp);
+void SaveWrite(TAvl *tree, FILE *fp) {
+    fwrite(&tree->value, sizeof(tree->value), 1, fp);
+    fwrite(tree->key, sizeof(char), MAX_KEY_LEN, fp);
 }
 
 int Save(TAvl *tree, char *fileName) {  
@@ -400,14 +393,16 @@ int Save(TAvl *tree, char *fileName) {
     if ((fp = fopen(fileName, "wb")) == NULL) {
         return -1;
     }
-    if (tree == NULL) {
-        fclose(fp);
-        return 0;
-    }
-    for (int i = 1; i <= tree->height; ++i) {
-        SaveAux(tree, 1, i, fp);
+    TAvlQueue *queue = NULL;
+    QueuePush(&queue, tree);
+    TAvl *curr;
+    while ((curr = QueuePop(&queue)) != NULL) {
+        SaveWrite(curr, fp);
+        QueuePush(&queue, curr->left);
+        QueuePush(&queue, curr->right);
     }
     fclose(fp);
+
     return 0;
 }
 

@@ -116,7 +116,6 @@ int main() {
                 printf("OK: %llu\n", *res);
             }
         }
-        CheckIntegrity(tree);
     }
 
     DeleteTree(tree);

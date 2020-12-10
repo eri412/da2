@@ -34,7 +34,7 @@ unsigned long long *Find(TAvl *root, char *key);
 void BalanceDeletion(TAvl *iter, TAvl **root);
 int Delete(TAvl **root, char *key);
 void DeleteTree(TAvl *tree);
-void SaveAux(TAvl *tree, int curLevel, int reqLevel, FILE *fp);
+void SaveWrite(TAvl *tree, FILE *fp);
 int Save(TAvl *tree, char *fileName);
 int Load(TAvl **tree, char *fileName);
 
