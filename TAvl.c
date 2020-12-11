@@ -11,8 +11,7 @@ TAvl *NewEmptyNode(TAvl *parent) {
     if ((temp = malloc(sizeof(TAvl))) == NULL) {
         return NULL;
     }
-    //memset(temp->key, 0, MAX_KEY_LEN + 1);
-    temp->key[MAX_KEY_LEN] = '\0';
+    memset(temp, 0, sizeof(*temp));
     temp->parent = parent;
     return temp;
 }
@@ -22,13 +21,11 @@ TAvl *NewNode(TAvl *parent, char *key, unsigned long long value) {
     if ((temp = malloc(sizeof(TAvl))) == NULL) {
         return NULL;
     }
-    memset(temp->key, 0, MAX_KEY_LEN + 1);
+    memset(temp, 0, sizeof(*temp));
     strcpy(temp->key, key);
     temp->value = value;
     temp->height = 1;
     temp->parent = parent;
-    temp->left = NULL;
-    temp->right = NULL;
     return temp;
 }
 
@@ -386,20 +383,23 @@ int Delete(TAvl **root, char *key) {
 }
 
 void DeleteTree(TAvl *tree) {
-    if (tree == NULL) {
-        return;
+    TAvlStack *stack = StackCreate();
+    StackPush(stack, tree);
+    TAvl *curr;
+    while((curr = StackPop(stack)) != NULL) {
+        StackPush(stack, curr->right);
+        StackPush(stack, curr->left);
+        free(curr);
     }
-    DeleteTree(tree->left);
-    DeleteTree(tree->right);
-    free(tree);
+    StackDelete(stack);
 }
 
 void SaveWrite(TAvl *tree, FILE *fp) {
     fwrite(tree->key, sizeof(*tree->key), MAX_KEY_LEN, fp);
     fwrite(&tree->value, sizeof(tree->value), 1, fp);
     fwrite(&tree->height, sizeof(tree->height), 1, fp);
-    char hasLeft = (tree->left != NULL);
-    char hasRight = (tree->right != NULL);
+    int hasLeft = (tree->left != NULL);
+    int hasRight = (tree->right != NULL);
     fwrite(&hasLeft, sizeof(hasLeft), 1, fp);
     fwrite(&hasRight, sizeof(hasRight), 1, fp);
 }
@@ -454,8 +454,8 @@ int Load(TAvl **tree, char *fileName) {
         itemsRead += fread(curr->key, sizeof(*curr->key), MAX_KEY_LEN, fp);
         itemsRead += fread(&curr->value, sizeof(curr->value), 1, fp);
         itemsRead += fread(&curr->height, sizeof(curr->height), 1, fp);
-        char hasLeft;
-        char hasRight;
+        int hasLeft;
+        int hasRight;
         itemsRead += fread(&hasLeft, sizeof(hasLeft), 1, fp);
         itemsRead += fread(&hasRight, sizeof(hasRight), 1, fp);
         if (itemsRead != MAX_KEY_LEN + 4) {
