@@ -37,36 +37,36 @@ int main() {
 
         if (strcmp(argv[0], "+") == 0) {
             if (argc != 3) {
-                printf("Wrong number of arguments, should be 3\n");
+                puts("Wrong number of arguments, should be 3");
                 continue;
             }
             int error = Insert(&tree, argv[1], strtoull(argv[2], NULL, 10));
             if (error == 1) {
-                printf("Exist\n");
+                puts("Exist");
             }
             else if (error == -1) {
                 perror("ERROR");
             }
             else {
-                printf("OK\n");
+                puts("OK");
             }
         }
         else if (strcmp(argv[0], "-") == 0) {
             if (argc != 2) {
-                printf("Wrong number of arguments, should be 2\n");
+                puts("Wrong number of arguments, should be 2");
                 continue;
             }
             int error = Delete(&tree, argv[1]);
             if (error) {
-                printf("NoSuchWord\n");
+                puts("NoSuchWord");
             }
             else {
-                printf("OK\n");
+                puts("OK");
             }
         }
         else if (strcmp(argv[0], "!") == 0) {
             if (argc != 3) {
-                printf("Wrong number of arguments, should be 3\n");
+                puts("Wrong number of arguments, should be 3");
                 continue;
             }
             if (strcmp(argv[1], "Save") == 0) {
@@ -75,7 +75,7 @@ int main() {
                     perror("ERROR");
                 }
                 else {
-                    printf("OK\n");
+                    puts("OK");
                 }
             }
             else if (strcmp(argv[1], "Load") == 0) {
@@ -87,16 +87,16 @@ int main() {
                 }
                 else if (error == 1) {
                     DeleteTree(tempTree);
-                    printf("File damaged, abort\n");
+                    puts("File damaged, abort");
                 }
                 else {
                     DeleteTree(tree);
                     tree = tempTree;
-                    printf("OK\n");
+                    puts("OK");
                 }
             }
             else {
-                printf("No such command\n");
+                puts("No such command");
                 continue;
             }
         }
@@ -105,15 +105,15 @@ int main() {
         }
         else {
             if (argc != 1) {
-                printf("No such command\n");
+                puts("No such command");
                 continue;
             }
             unsigned long long *res = Find(tree, argv[0]);
             if (res == NULL) {
-                printf("NoSuchWord\n");
+                puts("NoSuchWord");
             }
             else {
-                printf("OK: %llu\n", *res);
+                printf("OK: %llu", *res);
             }
         }
     }
