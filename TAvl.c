@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stddef.h>
 
 #include "TAvl.h"
 #include "TAvlStack.h"
@@ -395,9 +396,7 @@ void DeleteTree(TAvl *tree) {
 }
 
 void SaveWrite(TAvl *tree, FILE *fp) {
-    fwrite(tree->key, sizeof(*tree->key), MAX_KEY_LEN, fp);
-    fwrite(&tree->value, sizeof(tree->value), 1, fp);
-    fwrite(&tree->height, sizeof(tree->height), 1, fp);
+    fwrite(tree, offsetof(TAvl, parent), 1, fp);
     int hasLeft = (tree->left != NULL);
     int hasRight = (tree->right != NULL);
     fwrite(&hasLeft, sizeof(hasLeft), 1, fp);
@@ -451,14 +450,12 @@ int Load(TAvl **tree, char *fileName) {
     TAvl *curr;
     while ((curr = StackPop(stack)) != NULL) {
         size_t itemsRead = 0;
-        itemsRead += fread(curr->key, sizeof(*curr->key), MAX_KEY_LEN, fp);
-        itemsRead += fread(&curr->value, sizeof(curr->value), 1, fp);
-        itemsRead += fread(&curr->height, sizeof(curr->height), 1, fp);
+        itemsRead += fread(curr, offsetof(TAvl, parent), 1, fp);
         int hasLeft;
         int hasRight;
         itemsRead += fread(&hasLeft, sizeof(hasLeft), 1, fp);
         itemsRead += fread(&hasRight, sizeof(hasRight), 1, fp);
-        if (itemsRead != MAX_KEY_LEN + 4) {
+        if (itemsRead != 3) {
             fclose(fp);
             StackDelete(stack);
             return 1;

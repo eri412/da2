@@ -8,12 +8,12 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 enum {MAX_KEY_LEN = 256};
-enum {BUFSIZ_MULTIPLIER = 8};
+enum {BUFSIZ_MULTIPLIER = 2};
 
 typedef struct TAvl {
-    char key[MAX_KEY_LEN + 1];
     unsigned long long value;
     int height;
+    char key[MAX_KEY_LEN + 1];
     struct TAvl *parent;
     struct TAvl *left;
     struct TAvl *right;
