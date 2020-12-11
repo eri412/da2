@@ -8,6 +8,7 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 enum {MAX_KEY_LEN = 256};
+enum {BUFSIZ_MULTIPLIER = 8};
 
 typedef struct TAvl {
     char key[MAX_KEY_LEN + 1];
@@ -18,6 +19,7 @@ typedef struct TAvl {
     struct TAvl *right;
 } TAvl;
 
+TAvl *NewEmptyNode(TAvl *parent);
 TAvl *NewNode(TAvl *parent, char *key, unsigned long long value);
 TAvl *DeleteNode(TAvl *iter, TAvl **root);
 int Height(TAvl *tree);

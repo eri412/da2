@@ -3,7 +3,7 @@ CFLAGS = -pedantic -Wall -Wextra -O2
 
 .PHONY: clean
 
-solution: main.o TAvl.o TAvlQueue.o
+solution: main.o TAvl.o TAvlStack.o
 	$(CC) $(CFLAGS) $^ -o $@
 	
 main.o: main.c TAvl.h
@@ -12,7 +12,7 @@ main.o: main.c TAvl.h
 TAvl.o: TAvl.c TAvl.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-TAvlQueue.o: TAvlQueue.c TAvlQueue.h TAvl.h
+TAvlStack.o: TAvlStack.c TAvlStack.h TAvl.h
 	$(CC) $(CFLAGS) -c $< -o $@	
 
 clean:

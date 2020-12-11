@@ -4,7 +4,18 @@
 #include <ctype.h>
 
 #include "TAvl.h"
-#include "TAvlQueue.h"
+#include "TAvlStack.h"
+
+TAvl *NewEmptyNode(TAvl *parent) {
+    TAvl *temp;
+    if ((temp = malloc(sizeof(TAvl))) == NULL) {
+        return NULL;
+    }
+    //memset(temp->key, 0, MAX_KEY_LEN + 1);
+    temp->key[MAX_KEY_LEN] = '\0';
+    temp->parent = parent;
+    return temp;
+}
 
 TAvl *NewNode(TAvl *parent, char *key, unsigned long long value) {
     TAvl *temp;
@@ -384,8 +395,13 @@ void DeleteTree(TAvl *tree) {
 }
 
 void SaveWrite(TAvl *tree, FILE *fp) {
+    fwrite(tree->key, sizeof(*tree->key), MAX_KEY_LEN, fp);
     fwrite(&tree->value, sizeof(tree->value), 1, fp);
-    fwrite(tree->key, sizeof(char), MAX_KEY_LEN, fp);
+    fwrite(&tree->height, sizeof(tree->height), 1, fp);
+    char hasLeft = (tree->left != NULL);
+    char hasRight = (tree->right != NULL);
+    fwrite(&hasLeft, sizeof(hasLeft), 1, fp);
+    fwrite(&hasRight, sizeof(hasRight), 1, fp);
 }
 
 int Save(TAvl *tree, char *fileName) {  
@@ -393,48 +409,80 @@ int Save(TAvl *tree, char *fileName) {
     if ((fp = fopen(fileName, "wb")) == NULL) {
         return -1;
     }
-    TAvlQueue *queue = NULL;
-    QueuePush(&queue, tree);
-    TAvl *curr;
-    while ((curr = QueuePop(&queue)) != NULL) {
-        SaveWrite(curr, fp);
-        QueuePush(&queue, curr->left);
-        QueuePush(&queue, curr->right);
+    if (setvbuf(fp, NULL, _IOFBF, BUFSIZ * BUFSIZ_MULTIPLIER) != 0) {
+        fclose(fp);
+        return -1;
     }
+    TAvlStack *stack = StackCreate();
+    StackPush(stack, tree);
+    TAvl *curr;
+    while ((curr = StackPop(stack)) != NULL) {
+        SaveWrite(curr, fp);
+        StackPush(stack, curr->right);
+        StackPush(stack, curr->left);
+    }
+    StackDelete(stack);
     fclose(fp);
 
     return 0;
 }
 
+// (*tree) should be NULL
 int Load(TAvl **tree, char *fileName) {
     FILE *fp;
     if ((fp = fopen(fileName, "rb")) == NULL) {
         return -1;
     }
-    unsigned long long tempValue;
-    char tempKey[MAX_KEY_LEN + 1];
-    tempKey[MAX_KEY_LEN] = '\0';
-    while (1) {
-        tempValue = 0;
-        memset(tempKey, 0, MAX_KEY_LEN * sizeof(char));
-        int ch = fgetc(fp);
-        if (ch == EOF) {
+    if (setvbuf(fp, NULL, _IOFBF, BUFSIZ * BUFSIZ_MULTIPLIER) != 0) {
+        fclose(fp);
+        return -1;
+    }
+    int ch;
+    if ((ch = fgetc(fp)) == EOF) {
+        fclose(fp);
+        return 0;
+    }
+    else {
+        ungetc(ch, fp);
+    }
+    *tree = NewEmptyNode(NULL);
+    TAvlStack *stack = StackCreate();
+    StackPush(stack, *tree);
+    TAvl *curr;
+    while ((curr = StackPop(stack)) != NULL) {
+        size_t itemsRead = 0;
+        itemsRead += fread(curr->key, sizeof(*curr->key), MAX_KEY_LEN, fp);
+        itemsRead += fread(&curr->value, sizeof(curr->value), 1, fp);
+        itemsRead += fread(&curr->height, sizeof(curr->height), 1, fp);
+        char hasLeft;
+        char hasRight;
+        itemsRead += fread(&hasLeft, sizeof(hasLeft), 1, fp);
+        itemsRead += fread(&hasRight, sizeof(hasRight), 1, fp);
+        if (itemsRead != MAX_KEY_LEN + 4) {
             fclose(fp);
-            return 0;
+            StackDelete(stack);
+            return 1;
+        }
+        if (hasRight) {
+            curr->right = NewEmptyNode(curr);
+            StackPush(stack, curr->right);
         }
         else {
-            ungetc(ch, fp);
+            curr->right = NULL;
         }
-        size_t readed = fread(&tempValue, sizeof(tempValue), 1, fp);
-        if (readed == 0) {
-            fclose(fp);
-            return 1;
+        if (hasLeft) {
+            curr->left = NewEmptyNode(curr);
+            StackPush(stack, curr->left);
         }
-        readed = fread(tempKey, sizeof(char), MAX_KEY_LEN, fp);
-        if (readed != MAX_KEY_LEN) {
-            fclose(fp);
-            return 1;
+        else {
+            curr->left = NULL;
         }
-        Insert(tree, tempKey, tempValue);
     }
+    StackDelete(stack);
+    if (fgetc(fp) != EOF) {
+        fclose(fp);
+        return 1;
+    }
+    fclose(fp);
+    return 0;
 }

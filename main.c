@@ -87,7 +87,7 @@ int main() {
                 }
                 else if (error == 1) {
                     DeleteTree(tempTree);
-                    printf("Wrong number of bytes in file, abort\n");
+                    printf("File damaged, abort\n");
                 }
                 else {
                     DeleteTree(tree);
